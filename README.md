@@ -33,7 +33,6 @@ cp .env.example .env
 
 | Variable | Description | Default |
 |---|---|---|
-| `PORT` | Server port | `3000` |
 | `SESSION_SECRET` | Session encryption key | `replace-with-a-strong-random-string` |
 
 ### Run
