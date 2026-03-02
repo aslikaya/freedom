@@ -1,11 +1,5 @@
 const STORAGE_KEY = "progress-tracker-data-v1";
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const DEFAULT_REMINDER_SETTINGS = {
-  enabled: false,
-  time: "20:00",
-  webhookUrl: "",
-};
-
 const state = {
   viewYear: 0,
   viewMonth: 0,
@@ -17,7 +11,6 @@ const state = {
   weekModalOpen: false,
   monthModalOpen: false,
   workModalOpen: false,
-  reminderModalOpen: false,
   auth: {
     authenticated: false,
     email: "",
@@ -43,11 +36,7 @@ const monthlyReflection = document.getElementById("monthlyReflection");
 const openWorkSetup = document.getElementById("openWorkSetup");
 const workModal = document.getElementById("workModal");
 const workInput = document.getElementById("workInput");
-const openReminders = document.getElementById("openReminders");
 const openAccount = document.getElementById("openAccount");
-const reminderModal = document.getElementById("reminderModal");
-const reminderEnabled = document.getElementById("reminderEnabled");
-const reminderTime = document.getElementById("reminderTime");
 const authSignedOut = document.getElementById("authSignedOut");
 const authSignedIn = document.getElementById("authSignedIn");
 const entryModal = document.getElementById("entryModal");
@@ -75,8 +64,6 @@ function defaultData() {
     weeks: {},
     months: {},
     work: "",
-    reminders: { ...DEFAULT_REMINDER_SETTINGS },
-    reminderLastSent: "",
   };
 }
 
@@ -94,19 +81,11 @@ function loadData() {
 
 function sanitizeTrackerData(input) {
   const safe = input && typeof input === "object" ? input : {};
-  const reminders = safe.reminders && typeof safe.reminders === "object" ? safe.reminders : {};
-
   return {
     days: safe.days && typeof safe.days === "object" ? safe.days : {},
     weeks: safe.weeks && typeof safe.weeks === "object" ? safe.weeks : {},
     months: safe.months && typeof safe.months === "object" ? safe.months : {},
     work: typeof safe.work === "string" ? safe.work : "",
-    reminders: {
-      enabled: Boolean(reminders.enabled),
-      time: typeof reminders.time === "string" && reminders.time ? reminders.time : DEFAULT_REMINDER_SETTINGS.time,
-      webhookUrl: typeof reminders.webhookUrl === "string" ? reminders.webhookUrl : "",
-    },
-    reminderLastSent: typeof safe.reminderLastSent === "string" ? safe.reminderLastSent : "",
   };
 }
 
@@ -252,31 +231,6 @@ function attachEvents() {
     closeWorkModal();
   });
 
-  document.getElementById("saveReminders").addEventListener("click", async () => {
-    const timeValue = reminderTime.value || DEFAULT_REMINDER_SETTINGS.time;
-    state.data.reminders = {
-      ...state.data.reminders,
-      enabled: reminderEnabled.checked,
-      time: timeValue,
-    };
-    saveData();
-    closeReminderModal();
-    render();
-  });
-
-  document.getElementById("sendReminderTest").addEventListener("click", async () => {
-    if (!state.auth.authenticated) {
-      alert("Sign in to send a test email reminder.");
-      return;
-    }
-    try {
-      await apiRequest("/api/reminders/test", { method: "POST" });
-      alert("Test email sent.");
-    } catch (error) {
-      alert(error.message);
-    }
-  });
-
   registerBtn.addEventListener("click", () => {
     void register();
   });
@@ -291,10 +245,6 @@ function attachEvents() {
 
   openWorkSetup.addEventListener("click", () => {
     openWorkModal();
-  });
-
-  openReminders.addEventListener("click", () => {
-    openReminderModal();
   });
 
   openAccount.addEventListener("click", () => {
@@ -344,7 +294,6 @@ function attachEvents() {
   document.getElementById("weekModalClose").addEventListener("click", closeWeekModal);
   document.getElementById("monthModalClose").addEventListener("click", closeMonthModal);
   document.getElementById("workModalClose").addEventListener("click", closeWorkModal);
-  document.getElementById("reminderModalClose").addEventListener("click", closeReminderModal);
 
   dayModal.addEventListener("click", (event) => {
     if (event.target === dayModal) {
@@ -370,12 +319,6 @@ function attachEvents() {
     }
   });
 
-  reminderModal.addEventListener("click", (event) => {
-    if (event.target === reminderModal) {
-      closeReminderModal();
-    }
-  });
-
   authModal.addEventListener("click", (event) => {
     if (event.target === authModal) {
       closeAuthPanel();
@@ -389,7 +332,6 @@ function attachEvents() {
     if (event.key === "Escape" && state.weekModalOpen) closeWeekModal();
     if (event.key === "Escape" && state.monthModalOpen) closeMonthModal();
     if (event.key === "Escape" && state.workModalOpen) closeWorkModal();
-    if (event.key === "Escape" && state.reminderModalOpen) closeReminderModal();
     if (event.key === "Escape" && state.authPanelOpen) closeAuthPanel();
   });
 }
@@ -553,7 +495,6 @@ function render() {
   if (state.weekModalOpen) renderWeekPanel();
   if (state.monthModalOpen) renderMonthModal();
   if (state.workModalOpen) renderWorkModal();
-  if (state.reminderModalOpen) renderReminderModal();
 }
 
 function renderBoard() {
@@ -690,26 +631,12 @@ function closeWorkModal() {
   syncModalBodyState();
 }
 
-function openReminderModal() {
-  state.reminderModalOpen = true;
-  reminderModal.classList.remove("hidden");
-  syncModalBodyState();
-  renderReminderModal();
-}
-
-function closeReminderModal() {
-  state.reminderModalOpen = false;
-  reminderModal.classList.add("hidden");
-  syncModalBodyState();
-}
-
 function syncModalBodyState() {
   const hasOpenModal =
     state.dayModalOpen ||
     state.weekModalOpen ||
     state.monthModalOpen ||
     state.workModalOpen ||
-    state.reminderModalOpen ||
     state.authPanelOpen ||
     state.entryModalOpen;
   if (hasOpenModal) {
@@ -727,12 +654,6 @@ function renderWorkInfo() {
 
 function renderWorkModal() {
   workInput.value = state.data.work || "";
-}
-
-function renderReminderModal() {
-  const reminders = state.data.reminders || { ...DEFAULT_REMINDER_SETTINGS };
-  reminderEnabled.checked = Boolean(reminders.enabled);
-  reminderTime.value = reminders.time || DEFAULT_REMINDER_SETTINGS.time;
 }
 
 function renderDayModal() {

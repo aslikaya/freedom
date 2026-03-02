@@ -4,7 +4,6 @@ const express = require("express");
 const session = require("express-session");
 const bcrypt = require("bcryptjs");
 const Database = require("better-sqlite3");
-const nodemailer = require("nodemailer");
 require("dotenv").config();
 
 const app = express();
@@ -38,12 +37,6 @@ const defaultTrackerData = {
   weeks: {},
   months: {},
   work: "",
-  reminders: {
-    enabled: false,
-    time: "20:00",
-    webhookUrl: "",
-  },
-  reminderLastSent: "",
 };
 
 app.use(express.json({ limit: "1mb" }));
@@ -61,33 +54,8 @@ app.use(
   })
 );
 
-const transporter = createTransporter();
-
-function createTransporter() {
-  const host = process.env.SMTP_HOST;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  if (!host || !user || !pass) {
-    return null;
-  }
-
-  return nodemailer.createTransport({
-    host,
-    port: Number(process.env.SMTP_PORT || 587),
-    secure: String(process.env.SMTP_SECURE || "false") === "true",
-    auth: {
-      user,
-      pass,
-    },
-  });
-}
-
 function nowIso() {
   return new Date().toISOString();
-}
-
-function todayKey() {
-  return new Date().toISOString().slice(0, 10);
 }
 
 function validateEmail(email) {
@@ -96,27 +64,17 @@ function validateEmail(email) {
 
 function sanitizeTrackerData(input) {
   const safeInput = input && typeof input === "object" ? input : {};
-  const reminders = safeInput.reminders && typeof safeInput.reminders === "object" ? safeInput.reminders : {};
   return {
     days: safeInput.days && typeof safeInput.days === "object" ? safeInput.days : {},
     weeks: safeInput.weeks && typeof safeInput.weeks === "object" ? safeInput.weeks : {},
     months: safeInput.months && typeof safeInput.months === "object" ? safeInput.months : {},
     work: typeof safeInput.work === "string" ? safeInput.work : "",
-    reminders: {
-      enabled: Boolean(reminders.enabled),
-      time: typeof reminders.time === "string" && reminders.time ? reminders.time : "20:00",
-      webhookUrl: typeof reminders.webhookUrl === "string" ? reminders.webhookUrl : "",
-    },
-    reminderLastSent: typeof safeInput.reminderLastSent === "string" ? safeInput.reminderLastSent : "",
   };
 }
 
 function getUserById(id) {
   return db
-    .prepare(
-      `SELECT id, email, tracker_data, reminder_enabled, reminder_time, reminder_last_sent
-       FROM users WHERE id = ?`
-    )
+    .prepare(`SELECT id, email, tracker_data FROM users WHERE id = ?`)
     .get(id);
 }
 
@@ -217,13 +175,6 @@ app.get("/api/tracker", authRequired, (req, res) => {
     trackerData = { ...defaultTrackerData };
   }
 
-  trackerData.reminders = {
-    enabled: Boolean(user.reminder_enabled),
-    time: user.reminder_time || "20:00",
-    webhookUrl: trackerData.reminders.webhookUrl || "",
-  };
-  trackerData.reminderLastSent = user.reminder_last_sent || "";
-
   res.json({ trackerData });
 });
 
@@ -234,53 +185,13 @@ app.post("/api/tracker", authRequired, (req, res) => {
   db.prepare(
     `UPDATE users
      SET tracker_data = ?,
-         reminder_enabled = ?,
-         reminder_time = ?,
-         reminder_last_sent = ?,
          updated_at = ?
      WHERE id = ?`
   ).run(
     JSON.stringify(incoming),
-    incoming.reminders.enabled ? 1 : 0,
-    incoming.reminders.time,
-    incoming.reminderLastSent || "",
     ts,
     req.session.userId
   );
-
-  res.json({ ok: true });
-});
-
-app.post("/api/reminders/test", authRequired, async (req, res) => {
-  if (!transporter) {
-    res.status(400).json({ error: "SMTP is not configured. Set SMTP_* env vars." });
-    return;
-  }
-
-  const user = getUserById(req.session.userId);
-  if (!user) {
-    res.status(404).json({ error: "User not found." });
-    return;
-  }
-
-  let trackerData = defaultTrackerData;
-  try {
-    trackerData = sanitizeTrackerData(JSON.parse(user.tracker_data));
-  } catch {
-    trackerData = { ...defaultTrackerData };
-  }
-
-  const subject = "Reflection reminder test";
-  const text = trackerData.work
-    ? `Test reminder. Log progress for: ${trackerData.work}`
-    : "Test reminder. Open your tracker and write today\'s reflection.";
-
-  await transporter.sendMail({
-    from: process.env.SMTP_FROM || process.env.SMTP_USER,
-    to: user.email,
-    subject,
-    text,
-  });
 
   res.json({ ok: true });
 });
@@ -291,87 +202,7 @@ const server = app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
 
-function minuteOfDay(value) {
-  const [h, m] = String(value || "").split(":");
-  const hh = Number(h);
-  const mm = Number(m);
-  if (!Number.isInteger(hh) || !Number.isInteger(mm)) return null;
-  if (hh < 0 || hh > 23 || mm < 0 || mm > 59) return null;
-  return hh * 60 + mm;
-}
-
-function nowMinuteOfDay() {
-  const now = new Date();
-  return now.getHours() * 60 + now.getMinutes();
-}
-
-async function processReminderEmails() {
-  if (!transporter) return;
-
-  const users = db
-    .prepare(
-      `SELECT id, email, tracker_data, reminder_enabled, reminder_time, reminder_last_sent
-       FROM users WHERE reminder_enabled = 1`
-    )
-    .all();
-
-  const today = todayKey();
-  const currentMinute = nowMinuteOfDay();
-
-  for (const user of users) {
-    if (user.reminder_last_sent === today) {
-      continue;
-    }
-
-    const scheduledMinute = minuteOfDay(user.reminder_time || "20:00");
-    if (scheduledMinute === null || currentMinute < scheduledMinute) {
-      continue;
-    }
-
-    let trackerData = defaultTrackerData;
-    try {
-      trackerData = sanitizeTrackerData(JSON.parse(user.tracker_data));
-    } catch {
-      trackerData = { ...defaultTrackerData };
-    }
-
-    const subject = "Time for your daily reflection";
-    const text = trackerData.work
-      ? `Log progress for: ${trackerData.work}`
-      : "Open your tracker and write your daily reflection.";
-
-    try {
-      await transporter.sendMail({
-        from: process.env.SMTP_FROM || process.env.SMTP_USER,
-        to: user.email,
-        subject,
-        text,
-      });
-
-      db.prepare(
-        `UPDATE users
-         SET reminder_last_sent = ?,
-             updated_at = ?
-         WHERE id = ?`
-      ).run(today, nowIso(), user.id);
-    } catch (error) {
-      console.error(`Failed reminder send for ${user.email}:`, error.message);
-    }
-  }
-}
-
-const scheduler = setInterval(() => {
-  processReminderEmails().catch((error) => {
-    console.error("Reminder scheduler error:", error.message);
-  });
-}, 30 * 1000);
-
-processReminderEmails().catch((error) => {
-  console.error("Initial reminder check failed:", error.message);
-});
-
 function shutdown() {
-  clearInterval(scheduler);
   server.close(() => {
     db.close();
     process.exit(0);
