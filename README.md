@@ -18,8 +18,8 @@ A daily progress tracker with reflections and weekly/monthly reviews. Track work
 ### Installation
 
 ```bash
-git clone <repo-url>
-cd MakeSomething
+git clone https://github.com/aslikaya/freedom.git
+cd freedom
 npm install
 ```
 
@@ -34,7 +34,7 @@ cp .env.example .env
 | Variable | Description | Default |
 |---|---|---|
 | `PORT` | Server port | `3000` |
-| `SESSION_SECRET` | Session encryption key | `dev-secret-change-me` |
+| `SESSION_SECRET` | Session encryption key | `replace-with-a-strong-random-string` |
 
 ### Run
 
