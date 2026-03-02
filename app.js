@@ -421,7 +421,6 @@ async function logout() {
   state.auth.email = "";
   state.data = loadData();
   closeAuthPanel();
-  openEntryModal();
   renderAuthState();
   render();
 }
