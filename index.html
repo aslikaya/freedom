@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Progress Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Patrick+Hand&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>Freedom</h1>
+        </div>
+        <div class="month-nav">
+          <div class="month-actions-top">
+            <button id="openWorkSetup" type="button" aria-label="Set your work">Set Work</button>
+            <button id="openReminders" type="button" aria-label="Open reminders">Reminders</button>
+            <button id="openAccount" type="button" aria-label="Open account panel">Account</button>
+          </div>
+          <div class="month-main-row">
+            <button id="prevMonth" type="button" aria-label="Previous month">&#8592;</button>
+            <h2 id="monthLabel"></h2>
+            <button id="nextMonth" type="button" aria-label="Next month">&#8594;</button>
+          </div>
+          <button id="openMonthly" type="button" aria-label="Open monthly review">Monthly Review</button>
+        </div>
+      </header>
+
+      <p id="workBadge" class="work-badge">Work to log: Not set yet</p>
+
+      <section class="calendar-card board-wrap">
+        <div id="boardGrid" class="board-grid"></div>
+      </section>
+
+      <p class="footer-note">The work progress that will make you free</p>
+    </main>
+
+    <div id="dayModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="dayModalDate">
+      <div class="modal-card">
+        <button id="dayModalClose" class="modal-close" type="button" aria-label="Close day popup">x</button>
+        <h3 id="dayModalDate"></h3>
+        <div class="panel-dot-controls">
+          <button id="modalMinus" class="add-dot-icon panel-dot-btn" type="button" aria-label="Undo one work item">-</button>
+          <p id="modalScoreLabel" class="day-score-label">0 work items</p>
+          <button id="modalPlus" class="add-dot-icon panel-dot-btn" type="button" aria-label="Add one work item">+</button>
+        </div>
+        <label class="field-label" for="modalDailyReflection">Daily reflection</label>
+        <textarea id="modalDailyReflection" rows="6" placeholder="What went well today? What blocked you?"></textarea>
+        <button id="saveModalDaily" class="save-btn" type="button">Save Reflection</button>
+      </div>
+    </div>
+
+    <div id="weekModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="selectedWeekLabel">
+      <div class="modal-card week-modal-card">
+        <button id="weekModalClose" class="modal-close" type="button" aria-label="Close weekly popup">x</button>
+        <h3>Selected Week</h3>
+        <p id="selectedWeekLabel" class="panel-label">Choose any day to load its week</p>
+        <div id="weekSummary" class="week-summary"></div>
+        <p class="field-label">Week Notes</p>
+        <div id="weekDailyList" class="week-daily-list"></div>
+        <label class="field-label" for="weeklyReflection">Weekly reflection</label>
+        <textarea id="weeklyReflection" rows="6" placeholder="What progress did you make this week?"></textarea>
+        <button id="saveWeekly" class="save-btn" type="button">Save Weekly Reflection</button>
+      </div>
+    </div>
+
+    <div id="monthModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="selectedMonthLabel">
+      <div class="modal-card week-modal-card">
+        <button id="monthModalClose" class="modal-close" type="button" aria-label="Close monthly popup">x</button>
+        <h3 id="selectedMonthLabel">Monthly Review</h3>
+        <div id="monthSummary" class="week-summary"></div>
+        <p class="field-label">Weekly Reviews In This Month</p>
+        <div id="monthWeeklyList" class="week-daily-list"></div>
+        <label class="field-label" for="monthlyReflection">Monthly reflection</label>
+        <textarea id="monthlyReflection" rows="6" placeholder="What changed this month? What did you learn?"></textarea>
+        <button id="saveMonthly" class="save-btn" type="button">Save Monthly Reflection</button>
+      </div>
+    </div>
+
+    <div id="workModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="workModalTitle">
+      <div class="modal-card">
+        <button id="workModalClose" class="modal-close" type="button" aria-label="Close work setup popup">x</button>
+        <h3 id="workModalTitle">Set Your Work</h3>
+        <label class="field-label" for="workInput">What are you logging progress for?</label>
+        <textarea id="workInput" rows="4" placeholder="Example: Launch my portfolio website"></textarea>
+        <button id="saveWork" class="save-btn" type="button">Save Work</button>
+      </div>
+    </div>
+
+    <div id="reminderModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="reminderModalTitle">
+      <div class="modal-card">
+        <button id="reminderModalClose" class="modal-close" type="button" aria-label="Close reminders popup">x</button>
+        <h3 id="reminderModalTitle">Daily Reflection Reminders</h3>
+        <label class="checkbox-line">
+          <input id="reminderEnabled" type="checkbox" />
+          Enable daily reminder
+        </label>
+        <label class="field-label" for="reminderTime">Reminder time</label>
+        <input id="reminderTime" type="time" value="20:00" />
+        <p class="field-label helper-note">
+          Email reminders are sent to your account email when signed in and SMTP is configured on the server.
+        </p>
+        <div class="button-row">
+          <button id="sendReminderTest" class="save-btn secondary-btn" type="button">Send Test Email</button>
+          <button id="saveReminders" class="save-btn" type="button">Save Reminder Settings</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="entryModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="entryTitle">
+      <div class="modal-card entry-card">
+        <h3 id="entryTitle">Welcome to Freedom</h3>
+        <p class="field-label">Choose how you want to use the tracker right now.</p>
+        <div class="entry-actions">
+          <button id="entrySignIn" class="save-btn" type="button">Sign In / Register</button>
+          <button id="entryLocal" class="save-btn secondary-btn" type="button">Continue Local</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="authModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+      <div class="modal-card entry-card">
+        <button id="authModalClose" class="modal-close" type="button" aria-label="Close account popup">x</button>
+        <h3 id="authModalTitle">Account</h3>
+        <p id="authStatus" class="auth-status">Not signed in. Data is local only.</p>
+        <div id="authSignedOut" class="auth-signed-out">
+          <input id="authEmail" type="email" placeholder="Email" autocomplete="email" />
+          <input id="authPassword" type="password" placeholder="Password" autocomplete="current-password" />
+          <div class="auth-btn-row">
+            <button id="loginBtn" class="save-btn" type="button">Login</button>
+            <button id="registerBtn" class="save-btn secondary-btn" type="button">Register</button>
+          </div>
+        </div>
+        <div id="authSignedIn" class="auth-signed-in hidden">
+          <button id="logoutBtn" class="save-btn" type="button">Logout</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,504 @@
+:root {
+  --paper: #f5f5f3;
+  --ink: #222222;
+  --line: #2e2e2e;
+  --muted: #6e6e6e;
+  --dot: #222222;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Patrick Hand", cursive;
+}
+
+.app-shell {
+  max-width: 1220px;
+  margin: 0 auto;
+  padding: 0.9rem 1rem 2rem;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+h1 {
+  margin: 0.15rem 0 0;
+  font-family: "Kalam", cursive;
+  font-size: 2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.month-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.month-main-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.month-nav h2 {
+  margin: 0;
+  min-width: 135px;
+  text-align: center;
+  font-family: "Kalam", cursive;
+  font-size: 1.15rem;
+}
+
+.month-actions-top {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.month-nav button,
+.add-dot-icon,
+.save-btn,
+.modal-close,
+.board-day,
+.week-label {
+  font: inherit;
+}
+
+.month-nav button,
+#openMonthly {
+  border: 1.8px solid var(--line);
+  background: #f9f9f7;
+  height: 2rem;
+  cursor: pointer;
+}
+
+.month-nav button {
+  width: 2rem;
+}
+
+#prevMonth,
+#nextMonth {
+  width: auto;
+  height: auto;
+  padding: 0 0.18rem;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: "Kalam", cursive;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+#prevMonth:hover,
+#nextMonth:hover {
+  transform: translateY(-1px);
+}
+
+#openMonthly,
+#openWorkSetup {
+  width: auto;
+  padding: 0 0.55rem;
+  height: 1.95rem;
+  font-size: 0.92rem;
+}
+
+#openReminders {
+  width: auto;
+  padding: 0 0.55rem;
+  height: 1.95rem;
+  font-size: 0.92rem;
+}
+
+#openAccount {
+  width: auto;
+  padding: 0 0.55rem;
+  height: 1.95rem;
+  font-size: 0.92rem;
+}
+
+.work-badge {
+  margin: 0 0 0.55rem;
+  color: var(--muted);
+  font-family: "Kalam", cursive;
+  font-size: 0.98rem;
+}
+
+.auth-status {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.auth-signed-out {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.auth-signed-out input {
+  width: 100%;
+  border: 1.6px solid var(--line);
+  background: #fff;
+  font: inherit;
+  padding: 0.35rem 0.5rem;
+}
+
+.auth-btn-row {
+  display: flex;
+  gap: 0.45rem;
+  margin-top: 0.1rem;
+}
+
+.auth-btn-row .save-btn {
+  flex: 1;
+  margin-top: 0;
+  text-align: center;
+}
+
+.auth-signed-in {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.auth-signed-in .save-btn {
+  margin-top: 0;
+}
+
+.board-wrap {
+  border: 2px solid var(--line);
+  background: #f7f7f5;
+}
+
+.footer-note {
+  margin: 0.7rem 0 0;
+  text-align: center;
+  color: var(--muted);
+  font-family: "Kalam", cursive;
+  font-size: 1rem;
+}
+
+.board-grid {
+  display: grid;
+  grid-template-columns: 1.2fr repeat(7, 1fr);
+}
+
+.board-head {
+  border-right: 1.4px solid var(--line);
+  border-bottom: 1.8px solid var(--line);
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  font-family: "Kalam", cursive;
+  font-size: 1.08rem;
+  background: #f2f2f0;
+}
+
+.week-col-head {
+  background: #f2f2f0;
+}
+
+.week-label {
+  border: 0;
+  border-right: 1.4px solid var(--line);
+  border-bottom: 1.2px solid var(--line);
+  background: transparent;
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  font-family: "Kalam", cursive;
+  font-size: 1.15rem;
+  cursor: pointer;
+}
+
+.week-label.active-week {
+  background: #ececea;
+}
+
+.board-day {
+  border: 0;
+  border-right: 1.2px solid var(--line);
+  border-bottom: 1.2px solid var(--line);
+  background: transparent;
+  min-height: 92px;
+  text-align: left;
+  padding: 0.3rem 0.35rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.board-day.selected {
+  background: #ececea;
+}
+
+.board-day.outside {
+  opacity: 0.45;
+}
+
+.cell-date {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.dot-row {
+  display: flex;
+  gap: 0.3rem;
+  min-height: 12px;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--dot);
+  border: 1px solid var(--dot);
+}
+
+body.modal-open {
+  overflow: hidden;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background: rgba(30, 30, 30, 0.35);
+  padding: 1rem;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.modal-backdrop.hidden {
+  display: none;
+}
+
+.modal-card {
+  width: min(560px, 100%);
+  background: #fafaf8;
+  border: 2px solid var(--line);
+  padding: 0.8rem;
+  position: relative;
+}
+
+.week-modal-card {
+  width: min(760px, 100%);
+}
+
+.modal-card h3 {
+  margin: 0 2rem 0.35rem 0;
+  font-family: "Kalam", cursive;
+}
+
+.modal-close {
+  position: absolute;
+  right: 0.5rem;
+  top: 0.5rem;
+  width: 1.7rem;
+  height: 1.7rem;
+  border: 1.8px solid var(--line);
+  background: #f6f6f4;
+  cursor: pointer;
+}
+
+.panel-dot-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.2rem 0 0.55rem;
+}
+
+.add-dot-icon {
+  width: 1.7rem;
+  height: 1.7rem;
+  border: 1.8px solid var(--line);
+  background: #f7f7f5;
+  cursor: pointer;
+}
+
+.add-dot-icon:disabled,
+.save-btn:disabled,
+textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.day-score-label {
+  margin: 0;
+  min-width: 60px;
+  color: var(--muted);
+}
+
+.panel-label,
+.week-summary,
+.field-label {
+  color: var(--muted);
+}
+
+.panel-label {
+  margin: 0.15rem 0 0.45rem;
+}
+
+.week-summary {
+  margin-bottom: 0.5rem;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1.6px solid var(--line);
+  padding: 0.5rem;
+  background: #fff;
+  font: inherit;
+}
+
+input[type="time"],
+input[type="url"] {
+  width: 100%;
+  border: 1.6px solid var(--line);
+  padding: 0.45rem 0.5rem;
+  background: #fff;
+  font: inherit;
+  margin-bottom: 0.55rem;
+}
+
+.save-btn {
+  margin-top: 0.45rem;
+  border: 1.8px solid var(--line);
+  background: #f0f0ee;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+}
+
+.secondary-btn {
+  background: #f7f7f5;
+}
+
+.checkbox-line {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.5rem;
+}
+
+.checkbox-line input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+}
+
+.helper-note {
+  margin-top: 0.15rem;
+  font-size: 0.92rem;
+}
+
+.button-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.entry-card {
+  width: min(420px, 100%);
+}
+
+.entry-actions {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.week-daily-list {
+  display: grid;
+  gap: 0.38rem;
+  max-height: 240px;
+  overflow: auto;
+  margin: 0 0 0.7rem;
+}
+
+.week-day-note {
+  text-align: left;
+  border: 1.2px solid var(--line);
+  background: #fff;
+  padding: 0.35rem 0.45rem;
+  cursor: default;
+}
+
+.month-week-note {
+  cursor: default;
+}
+
+.week-day-head {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+}
+
+.week-day-text {
+  margin: 0.15rem 0 0;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 900px) {
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .month-nav {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .month-nav,
+  .month-actions-top {
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  .auth-controls input {
+    min-width: 160px;
+  }
+
+  .board-grid {
+    grid-template-columns: 1.45fr repeat(7, minmax(50px, 1fr));
+  }
+
+  .week-label {
+    font-size: 0.95rem;
+  }
+
+  .board-day {
+    min-height: 76px;
+  }
+}
