@@ -367,6 +367,15 @@ function attachEvents() {
     }
   });
 
+  document.getElementById("testReminder").addEventListener("click", async () => {
+    try {
+      await subscribeToPush();
+      await apiRequest("/api/reminders/test", { method: "POST" });
+    } catch (error) {
+      alert(error.message);
+    }
+  });
+
   document.getElementById("reminderModalClose").addEventListener("click", closeReminderModal);
 
   reminderModal.addEventListener("click", (event) => {

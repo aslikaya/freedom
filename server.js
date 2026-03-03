@@ -264,6 +264,31 @@ app.post("/api/reminders", authRequired, (req, res) => {
   res.json({ ok: true });
 });
 
+app.post("/api/reminders/test", authRequired, async (req, res) => {
+  const user = db
+    .prepare(`SELECT push_subscription FROM users WHERE id = ?`)
+    .get(req.session.userId);
+
+  if (!user || !user.push_subscription) {
+    res.status(400).json({ error: "No push subscription found. Enable reminders first." });
+    return;
+  }
+
+  try {
+    const subscription = JSON.parse(user.push_subscription);
+    await webpush.sendNotification(
+      subscription,
+      JSON.stringify({
+        title: "Test notification",
+        body: "Push notifications are working!",
+      })
+    );
+    res.json({ ok: true });
+  } catch (error) {
+    res.status(500).json({ error: "Push failed: " + error.message });
+  }
+});
+
 // Serve service worker with correct headers (no aggressive caching)
 app.get("/service-worker.js", (req, res) => {
   res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
