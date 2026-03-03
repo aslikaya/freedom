@@ -11,6 +11,7 @@ const state = {
   weekModalOpen: false,
   monthModalOpen: false,
   workModalOpen: false,
+  reminderModalOpen: false,
   auth: {
     authenticated: false,
     email: "",
@@ -43,6 +44,12 @@ const entryModal = document.getElementById("entryModal");
 const entrySignIn = document.getElementById("entrySignIn");
 const entryLocal = document.getElementById("entryLocal");
 const authModal = document.getElementById("authModal");
+
+const openReminders = document.getElementById("openReminders");
+const reminderModal = document.getElementById("reminderModal");
+const reminderEnabled = document.getElementById("reminderEnabled");
+const reminderTime = document.getElementById("reminderTime");
+const reminderStatus = document.getElementById("reminderStatus");
 
 const authStatus = document.getElementById("authStatus");
 const authEmail = document.getElementById("authEmail");
@@ -327,11 +334,53 @@ function attachEvents() {
 
   document.getElementById("authModalClose").addEventListener("click", closeAuthPanel);
 
+  openReminders.addEventListener("click", () => {
+    openReminderModal();
+  });
+
+  document.getElementById("saveReminders").addEventListener("click", async () => {
+    const enabled = reminderEnabled.checked;
+    const time = reminderTime.value || "20:00";
+
+    if (enabled) {
+      try {
+        await subscribeToPush();
+      } catch (error) {
+        alert("Could not enable notifications: " + error.message);
+        return;
+      }
+    }
+
+    if (!state.auth.authenticated) {
+      alert("Sign in to save reminder settings.");
+      return;
+    }
+
+    try {
+      await apiRequest("/api/reminders", {
+        method: "POST",
+        body: JSON.stringify({ enabled, time }),
+      });
+      closeReminderModal();
+    } catch (error) {
+      alert(error.message);
+    }
+  });
+
+  document.getElementById("reminderModalClose").addEventListener("click", closeReminderModal);
+
+  reminderModal.addEventListener("click", (event) => {
+    if (event.target === reminderModal) {
+      closeReminderModal();
+    }
+  });
+
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape" && state.dayModalOpen) closeDayModal();
     if (event.key === "Escape" && state.weekModalOpen) closeWeekModal();
     if (event.key === "Escape" && state.monthModalOpen) closeMonthModal();
     if (event.key === "Escape" && state.workModalOpen) closeWorkModal();
+    if (event.key === "Escape" && state.reminderModalOpen) closeReminderModal();
     if (event.key === "Escape" && state.authPanelOpen) closeAuthPanel();
   });
 }
@@ -630,12 +679,101 @@ function closeWorkModal() {
   syncModalBodyState();
 }
 
+function openReminderModal() {
+  state.reminderModalOpen = true;
+  reminderModal.classList.remove("hidden");
+  syncModalBodyState();
+  renderReminderModal();
+}
+
+function closeReminderModal() {
+  state.reminderModalOpen = false;
+  reminderModal.classList.add("hidden");
+  syncModalBodyState();
+}
+
+async function renderReminderModal() {
+  if (!("Notification" in window)) {
+    reminderStatus.textContent = "Push notifications are not supported in this browser.";
+    reminderEnabled.disabled = true;
+    return;
+  }
+
+  if (Notification.permission === "denied") {
+    reminderStatus.textContent = "Notifications are blocked. Enable them in your browser settings.";
+    reminderEnabled.disabled = true;
+    return;
+  }
+
+  reminderStatus.textContent = "";
+  reminderEnabled.disabled = false;
+
+  if (!state.auth.authenticated) {
+    reminderStatus.textContent = "Sign in to enable push reminders.";
+    reminderEnabled.disabled = true;
+    return;
+  }
+
+  try {
+    const settings = await apiRequest("/api/reminders", { method: "GET" });
+    reminderEnabled.checked = settings.enabled;
+    reminderTime.value = settings.time || "20:00";
+  } catch {
+    reminderEnabled.checked = false;
+    reminderTime.value = "20:00";
+  }
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; i++) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+async function subscribeToPush() {
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+    throw new Error("Push notifications are not supported in this browser.");
+  }
+
+  const permission = await Notification.requestPermission();
+  if (permission !== "granted") {
+    throw new Error("Notification permission was denied.");
+  }
+
+  const reg = await navigator.serviceWorker.ready;
+  const { key } = await apiRequest("/api/push/vapid-key", { method: "GET" });
+  if (!key) {
+    throw new Error("Push notifications are not configured on the server.");
+  }
+
+  const applicationServerKey = urlBase64ToUint8Array(key);
+
+  let subscription = await reg.pushManager.getSubscription();
+  if (!subscription) {
+    subscription = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey,
+    });
+  }
+
+  await apiRequest("/api/push/subscribe", {
+    method: "POST",
+    body: JSON.stringify({ subscription }),
+  });
+}
+
 function syncModalBodyState() {
   const hasOpenModal =
     state.dayModalOpen ||
     state.weekModalOpen ||
     state.monthModalOpen ||
     state.workModalOpen ||
+    state.reminderModalOpen ||
     state.authPanelOpen ||
     state.entryModalOpen;
   if (hasOpenModal) {
@@ -757,3 +895,10 @@ init().catch((error) => {
   console.error("Init failed:", error);
   authStatus.textContent = "App failed to initialize.";
 });
+
+// Register service worker for PWA support
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/service-worker.js").catch((error) => {
+    console.error("SW registration failed:", error);
+  });
+}
