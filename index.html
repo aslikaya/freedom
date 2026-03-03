@@ -4,6 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Progress Tracker</title>
+    <meta name="theme-color" content="#222222" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -21,6 +26,7 @@
         <div class="month-nav">
           <div class="month-actions-top">
             <button id="openWorkSetup" type="button" aria-label="Set your work">Set Work</button>
+            <button id="openReminders" type="button" aria-label="Open reminders">Reminders</button>
             <button id="openAccount" type="button" aria-label="Open account panel">Account</button>
           </div>
           <div class="month-main-row">
@@ -90,6 +96,24 @@
         <label class="field-label" for="workInput">What are you logging progress for?</label>
         <textarea id="workInput" rows="4" placeholder="Example: Launch my portfolio website"></textarea>
         <button id="saveWork" class="save-btn" type="button">Save Work</button>
+      </div>
+    </div>
+
+    <div id="reminderModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="reminderModalTitle">
+      <div class="modal-card">
+        <button id="reminderModalClose" class="modal-close" type="button" aria-label="Close reminders popup">x</button>
+        <h3 id="reminderModalTitle">Daily Reminders</h3>
+        <p id="reminderStatus" class="field-label helper-note"></p>
+        <label class="checkbox-line">
+          <input id="reminderEnabled" type="checkbox" />
+          Enable daily reminder
+        </label>
+        <label class="field-label" for="reminderTime">Reminder time</label>
+        <input id="reminderTime" type="time" value="20:00" />
+        <p class="field-label helper-note">
+          You'll receive a push notification at this time each day to remind you to log your reflection.
+        </p>
+        <button id="saveReminders" class="save-btn" type="button">Save Reminder Settings</button>
       </div>
     </div>
 
